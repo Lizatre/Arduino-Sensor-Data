@@ -9,9 +9,6 @@ const int analogInPin = A0;  // Analog input pin that the potentiometer is attac
 const int analogOutPin = 9; // Analog output pin that the LED is attached to
 const int rolling_average_number = 1000
 
-int sensorValue = 0;        // value read from the pot
-int outputValue = 0;        // value output to the PWM (analog out)
-
 void setup() {
   // initialize serial communications at 9600 bps:
   Serial.begin(9600); 
@@ -20,13 +17,25 @@ void setup() {
 void loop() {
   // read the analog in value:
   total = 0
+  square_total = 0
   for (i=1;i <= rolling_average_number;i++){
+    sensor_value = read_sensor_data()
     total = total * (i/(i+1))
-    total = total + (1/(i+1))* read_sensor_data() //run a rolling average
+    square_total = square_total * (i/(i+1))
+    total = total + (1/(i+1))* sensor_value //run a rolling average
+    square_total = square_total + (sensor_value ^ sensor_value) * (1/i)
     delay(2); // wait 2 milliseconds to let the ADC settle
   }
   // print the results to the serial monitor:                      
-  Serial.print(sensorValue);      
+  average = total
+  square_average = square_total
+  variance = abs(square_average - average^2)
+  standard_deviation = sqrt(variance)
+  
+  Serial.print("\nmean =");
+  Serial.print(average);
+  Serial.print("\nSD =");
+  Serial.print(standard_deviation);
                  
 }
 
